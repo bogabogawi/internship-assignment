@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Assignment - 3D Data Viz</title>
+    <style>
+        body { margin: 0; background-color: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
+        #container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; }
+        button { display: block; margin: 5px 0; padding: 8px 15px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; }
+        button:hover { background: #555; }
+        .element { width: 100px; height: 100px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; display: flex; flex-direction: column; justify-content: center; align-items: center; user-select: none; backdrop-filter: blur(2px); }
+        .element:hover { box-shadow: 0px 0px 12px rgba(0,255,255,0.75); border: 1px solid rgba(127,255,255,0.75); }
+        .element img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; }
+        .element .name { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 0 0 2px #000; }
+        .element .worth { font-size: 9px; color: #ddd; }
+        #login-status { margin-top: 10px; font-size: 12px; color: #0f0; }
+        
+        /* Color Classes based on Net Worth */
+        .bg-red { background-color: rgba(255, 0, 0, 0.6); }
+        .bg-orange { background-color: rgba(255, 165, 0, 0.6); }
+        .bg-green { background-color: rgba(0, 255, 0, 0.6); }
+    </style>
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="ui">
+        <h3>Layout Controls</h3>
+        <button onclick="switchLayout('table')">Table (20x10)</button>
+        <button onclick="switchLayout('grid')">Grid (5x4x10)</button>
+        <button onclick="switchLayout('helix')">Double Helix</button>
+        <button onclick="switchLayout('sphere')">Sphere</button>
+        <div id="login-status">Not Logged In</div>
+        <div id="g_id_onload"
+             data-client_id="498042288435-c0aamai9t7u7bjb7lr6gl4jfbj7bhh9k.apps.googleusercontent.com"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+    </div>
+
+    <div id="container"></div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
+        import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+
+        let camera, scene, renderer, controls;
+        let objects = [];
+        let targets = { table: [], sphere: [], helix: [], grid: [] };
+        let dataSet = [];
+
+        // --- CONFIGURATION ---
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1_5tOVrgUWx0t7Z7VbLFitya_hv0k4F9IHrxpyKH-R-A/edit?usp=sharing'; 
+        // ---------------------
+
+        init();
+        fetchData();
+
+        function init() {
+            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.z = 3000;
+
+            scene = new THREE.Scene();
+
+            // Table Layout (20x10)
+            for (let i = 0; i < 200; i++) {
+                const object = new THREE.Object3D();
+                object.position.x = ((i % 20) * 140) - 1330;
+                object.position.y = -(Math.floor(i / 20) * 180) + 990;
+                object.position.z = 0;
+                targets.table.push(object);
+            }
+
+            // Grid Layout (5x4x10) -> 5 width, 4 depth, 10 height
+            let k = 0;
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 4; j++) {
+                    for (let h = 0; h < 10; h++) {
+                        const object = new THREE.Object3D();
+                        object.position.x = ((i * 140) - 280);
+                        object.position.y = -(h * 180) + 900;
+                        object.position.z = ((j * 140) - 280);
+                        targets.grid.push(object);
+                        k++;
+                    }
+                }
+            }
+
+            // Helix Layout (Double)
+            for (let i = 0; i < 200; i++) {
+                const angle = i * 0.2;
+                const object = new THREE.Object3D();
+                // Strand 1
+                if(i % 2 === 0) {
+                    object.position.x = (Math.cos(angle) * 500);
+                    object.position.z = (Math.sin(angle) * 500);
+                    object.position.y = (i * 10) - 1000;
+                } else {
+                    // Strand 2 (Offset by PI)
+                    object.position.x = (Math.cos(angle + Math.PI) * 500);
+                    object.position.z = (Math.sin(angle + Math.PI) * 500);
+                    object.position.y = (i * 10) - 1000;
+                }
+                targets.helix.push(object);
+            }
+
+            // Sphere Layout
+            for (let i = 0; i < 200; i++) {
+                const phi = Math.acos(-1 + (2 * i) / 200);
+                const theta = Math.sqrt(200 * Math.PI) * phi;
+                const object = new THREE.Object3D();
+                object.position.x = 800 * Math.cos(theta) * Math.sin(phi);
+                object.position.y = 800 * Math.sin(theta) * Math.sin(phi);
+                object.position.z = 800 * Math.cos(phi);
+                targets.sphere.push(object);
+            }
+
+            renderer = new CSS3DRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            controls = new TrackballControls(camera, renderer.domElement);
+            controls.minDistance = 500;
+            controls.maxDistance = 6000;
+            controls.addEventListener('change', render);
+
+            window.addEventListener('resize', onWindowResize);
+            
+            // Expose switchLayout to window for buttons
+            window.switchLayout = function(targetName) {
+                transform(targets[targetName], 2000);
+            };
+        }
+
+        function fetchData() {
+            fetch(SHEET_CSV_URL)
+                .then(response => response.text())
+                .then(text => {
+                    const rows = text.split('\n').slice(1); // Skip header
+                    dataSet = rows.map(row => {
+                        const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Handle CSV commas in quotes
+                        if(cols.length < 6) return null;
+                        return {
+                            name: cols[0]?.trim(),
+                            photo: cols[1]?.trim(),
+                            age: cols[2]?.trim(),
+                            country: cols[3]?.trim(),
+                            interest: cols[4]?.trim(),
+                            netWorth: cols[5]?.trim().replace(/[^0-9.]/g, '') // Clean currency
+                        };
+                    }).filter(item => item !== null);
+                    
+                    createElements();
+                    transform(targets.table, 2000); // Default view
+                    animate();
+                })
+                .catch(err => console.error("Error loading sheet:", err));
+        }
+
+        function createElements() {
+            // Clear existing
+            objects.forEach(obj => scene.remove(obj));
+            objects = [];
+
+            const count = Math.min(dataSet.length, 200); // Max 200 for layouts
+
+            for (let i = 0; i < count; i++) {
+                const data = dataSet[i];
+                const worth = parseFloat(data.netWorth);
+                
+                // Color Logic
+                let colorClass = 'bg-red';
+                if (worth > 200000) colorClass = 'bg-green';
+                else if (worth > 100000) colorClass = 'bg-orange';
+
+                const element = document.createElement('div');
+                element.className = `element ${colorClass}`;
+
+                const img = document.createElement('img');
+                img.src = data.photo;
+                element.appendChild(img);
+
+                const name = document.createElement('div');
+                name.className = 'name';
+                name.innerHTML = data.name;
+                element.appendChild(name);
+
+                const worthDiv = document.createElement('div');
+                worthDiv.className = 'worth';
+                worthDiv.innerHTML = `$${worth.toLocaleString()}`;
+                element.appendChild(worthDiv);
+
+                const object = new CSS3DObject(element);
+                // Position will be set by transform later based on layout targets
+                object.position.copy(targets.table[i].position); 
+                scene.add(object);
+                objects.push(object);
+            }
+        }
+
+        function transform(targets, duration) {
+            TWEEN.removeAll();
+            for (let i = 0; i < objects.length; i++) {
+                const object = objects[i];
+                const target = targets[i];
+                
+                // If we have more targets than data, stop at data length
+                if(!target) continue;
+
+                new TWEEN.Tween(object.position)
+                    .to({ x: target.position.x, y: target.position.y, z: target.position.z }, Math.random() * duration + duration)
+                    .easing(TWEEN.Easing.Exponential.InOut)
+                    .start();
+
+                new TWEEN.Tween(object.rotation)
+                    .to({ x: target.rotation.x, y: target.rotation.y, z: target.rotation.z }, Math.random() * duration + duration)
+                    .easing(TWEEN.Easing.Exponential.InOut)
+                    .start();
+            }
+            new TWEEN.Tween(this)
+                .to({}, duration * 2)
+                .onUpdate(render)
+                .start();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            render();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+            controls.update();
+        }
+
+        function render() {
+            renderer.render(scene, camera);
+        }
+    </script>
+    <!-- Tween.js for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+</body>
+</html>
