@@ -3,28 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Internship Assignment - 3D Data Viz</title>
+    <title>Internship Assignment - 3D Data Visualization</title>
     <style>
-        body { margin: 0; background-color: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-        #container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 8px; }
-        button { display: block; margin: 5px 0; padding: 8px 15px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; }
-        button:hover { background: #555; }
-        .element { width: 100px; height: 100px; box-shadow: 0px 0px 12px rgba(0,255,255,0.5); border: 1px solid rgba(127,255,255,0.25); text-align: center; cursor: default; display: flex; flex-direction: column; justify-content: center; align-items: center; user-select: none; backdrop-filter: blur(2px); }
-        .element:hover { box-shadow: 0px 0px 12px rgba(0,255,255,0.75); border: 1px solid rgba(127,255,255,0.75); }
-        .element img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; }
-        .element .name { font-size: 10px; font-weight: bold; color: #fff; text-shadow: 0 0 2px #000; }
-        .element .worth { font-size: 9px; color: #ddd; }
-        #login-status { margin-top: 10px; font-size: 12px; color: #0f0; }
+        body { 
+            margin: 0; 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            overflow: hidden; 
+        }
+        #container { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+        }
+        #ui { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            z-index: 100; 
+            background: rgba(0,0,0,0.85); 
+            padding: 20px; 
+            border-radius: 10px; 
+            max-width: 250px;
+            border: 1px solid #333;
+        }
+        h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #fff;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 8px;
+        }
+        button { 
+            display: block; 
+            width: 100%; 
+            margin: 8px 0; 
+            padding: 10px 15px; 
+            cursor: pointer; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: #fff; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 13px;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .element { 
+            width: 100px; 
+            height: 100px; 
+            box-shadow: 0px 0px 15px rgba(0,255,255,0.4); 
+            border: 2px solid rgba(255,255,255,0.3); 
+            text-align: center; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            user-select: none; 
+            backdrop-filter: blur(4px);
+            border-radius: 10px;
+            transition: all 0.3s;
+            padding: 5px;
+        }
+        .element:hover { 
+            box-shadow: 0px 0px 25px rgba(0,255,255,0.8); 
+            border: 2px solid rgba(255,255,255,0.8);
+            transform: scale(1.1);
+            z-index: 1000;
+        }
+        .element img { 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            margin-bottom: 5px; 
+            border: 2px solid #fff;
+        }
+        .element .name { 
+            font-size: 9px; 
+            font-weight: bold; 
+            color: #fff; 
+            text-shadow: 0 0 3px #000;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 90px;
+        }
+        .element .worth { 
+            font-size: 8px; 
+            color: #fff;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        #login-status { 
+            margin-top: 15px; 
+            font-size: 13px; 
+            padding: 8px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .logged-out {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+        }
+        .logged-in {
+            color: #51cf66;
+            background: rgba(81, 207, 102, 0.2);
+        }
         
         /* Color Classes based on Net Worth */
-        .bg-red { background-color: rgba(255, 0, 0, 0.6); }
-        .bg-orange { background-color: rgba(255, 165, 0, 0.6); }
-        .bg-green { background-color: rgba(0, 255, 0, 0.6); }
+        .bg-red { 
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.8) 0%, rgba(255, 71, 87, 0.6) 100%); 
+        }
+        .bg-orange { 
+            background: linear-gradient(135deg, rgba(255, 159, 67, 0.8) 0%, rgba(255, 159, 67, 0.6) 100%); 
+        }
+        .bg-green { 
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.8) 0%, rgba(76, 175, 80, 0.6) 100%); 
+        }
+        
+        #loading { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            color: #fff; 
+            font-size: 24px; 
+            z-index: 200;
+            background: rgba(0,0,0,0.8);
+            padding: 30px 50px;
+            border-radius: 15px;
+            border: 2px solid #4CAF50;
+        }
+        .error {
+            color: #ff6b6b;
+        }
     </style>
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <!-- Three.js -->
+    <!-- Three.js Import Map -->
     <script type="importmap">
         {
             "imports": {
@@ -37,20 +164,21 @@
 <body>
 
     <div id="ui">
-        <h3>Layout Controls</h3>
-        <button onclick="switchLayout('table')">Table (20x10)</button>
-        <button onclick="switchLayout('grid')">Grid (5x4x10)</button>
-        <button onclick="switchLayout('helix')">Double Helix</button>
-        <button onclick="switchLayout('sphere')">Sphere</button>
-        <div id="login-status">Not Logged In</div>
+        <h3>📊 Layout Controls</h3>
+        <button onclick="switchLayout('table')">📋 Table (20×10)</button>
+        <button onclick="switchLayout('grid')">⊞ Grid (5×4×10)</button>
+        <button onclick="switchLayout('helix')">🧬 Double Helix</button>
+        <button onclick="switchLayout('sphere')">🔵 Sphere</button>
+        <div id="login-status" class="logged-out">⚠ Not Logged In</div>
         <div id="g_id_onload"
              data-client_id="498042288435-c0aamai9t7u7bjb7lr6gl4jfbj7bhh9k.apps.googleusercontent.com"
              data-callback="handleCredentialResponse"
              data-auto_prompt="false">
         </div>
-        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"></div>
+        <div class="g_id_signin" data-type="standard" data-size="large" data-theme="filled_blue" data-text="signin_with" data-shape="rectangular" data-logo_alignment="left" style="margin-top: 10px;"></div>
     </div>
 
+    <div id="loading">📥 Loading data...</div>
     <div id="container"></div>
 
     <script type="module">
@@ -58,14 +186,16 @@
         import { CSS3DRenderer, CSS3DObject } from 'three/addons/renderers/CSS3DRenderer.js';
         import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 
+        // Make TWEEN accessible in module scope
+        const TWEEN = window.TWEEN;
+
         let camera, scene, renderer, controls;
         let objects = [];
         let targets = { table: [], sphere: [], helix: [], grid: [] };
         let dataSet = [];
 
-        // --- CONFIGURATION ---
-        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1_5tOVrgUWx0t7Z7VbLFitya_hv0k4F9IHrxpyKH-R-A/edit?usp=sharing'; 
-        // ---------------------
+        // 🔧 REPLACE THIS WITH YOUR PUBLISHED CSV URL
+        const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTWYR8I1dtoaIE6a_AvXNDW2hK_P32HvPpSeCvA5iKZks4rku9wzeWhU2YlUNDuWxsgeegtb2JCwKku/pub?output=csv';
 
         init();
         fetchData();
@@ -76,7 +206,7 @@
 
             scene = new THREE.Scene();
 
-            // Table Layout (20x10)
+            // Table Layout (20x10) = 200 elements
             for (let i = 0; i < 200; i++) {
                 const object = new THREE.Object3D();
                 object.position.x = ((i % 20) * 140) - 1330;
@@ -85,8 +215,7 @@
                 targets.table.push(object);
             }
 
-            // Grid Layout (5x4x10) -> 5 width, 4 depth, 10 height
-            let k = 0;
+            // Grid Layout (5x4x10) = 200 elements
             for (let i = 0; i < 5; i++) {
                 for (let j = 0; j < 4; j++) {
                     for (let h = 0; h < 10; h++) {
@@ -95,17 +224,16 @@
                         object.position.y = -(h * 180) + 900;
                         object.position.z = ((j * 140) - 280);
                         targets.grid.push(object);
-                        k++;
                     }
                 }
             }
 
-            // Helix Layout (Double)
+            // Helix Layout (Double Helix)
             for (let i = 0; i < 200; i++) {
                 const angle = i * 0.2;
                 const object = new THREE.Object3D();
-                // Strand 1
                 if(i % 2 === 0) {
+                    // Strand 1
                     object.position.x = (Math.cos(angle) * 500);
                     object.position.z = (Math.sin(angle) * 500);
                     object.position.y = (i * 10) - 1000;
@@ -131,6 +259,8 @@
 
             renderer = new CSS3DRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.domElement.style.position = 'absolute';
+            renderer.domElement.style.top = '0';
             document.getElementById('container').appendChild(renderer.domElement);
 
             controls = new TrackballControls(camera, renderer.domElement);
@@ -142,47 +272,60 @@
             
             // Expose switchLayout to window for buttons
             window.switchLayout = function(targetName) {
-                transform(targets[targetName], 2000);
+                if(targets[targetName]) {
+                    transform(targets[targetName], 2000);
+                }
             };
         }
 
         function fetchData() {
             fetch(SHEET_CSV_URL)
-                .then(response => response.text())
+                .then(response => {
+                    if(!response.ok) throw new Error('Failed to fetch CSV. Check your Google Sheet publish URL.');
+                    return response.text();
+                })
                 .then(text => {
-                    const rows = text.split('\n').slice(1); // Skip header
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    const rows = text.trim().split('\n').slice(1);
                     dataSet = rows.map(row => {
-                        const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Handle CSV commas in quotes
+                        const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                         if(cols.length < 6) return null;
                         return {
-                            name: cols[0]?.trim(),
-                            photo: cols[1]?.trim(),
-                            age: cols[2]?.trim(),
-                            country: cols[3]?.trim(),
-                            interest: cols[4]?.trim(),
-                            netWorth: cols[5]?.trim().replace(/[^0-9.]/g, '') // Clean currency
+                            name: cols[0]?.trim().replace(/^"|"$/g, ''),
+                            photo: cols[1]?.trim().replace(/^"|"$/g, ''),
+                            age: cols[2]?.trim().replace(/^"|"$/g, ''),
+                            country: cols[3]?.trim().replace(/^"|"$/g, ''),
+                            interest: cols[4]?.trim().replace(/^"|"$/g, ''),
+                            netWorth: cols[5]?.trim().replace(/^"|"$/g, '').replace(/[^0-9.]/g, '')
                         };
-                    }).filter(item => item !== null);
+                    }).filter(item => item !== null && item.name);
                     
-                    createElements();
-                    transform(targets.table, 2000); // Default view
-                    animate();
+                    if(dataSet.length > 0) {
+                        createElements();
+                        transform(targets.table, 2000);
+                        animate();
+                    } else {
+                        document.getElementById('loading').innerHTML = '<span class="error">❌ No data loaded.<br>Check CSV URL.</span>';
+                    }
                 })
-                .catch(err => console.error("Error loading sheet:", err));
+                .catch(err => {
+                    console.error("Error loading sheet:", err);
+                    document.getElementById('loading').innerHTML = '<span class="error">❌ Error loading data.<br>Check console & CSV URL.</span>';
+                });
         }
 
         function createElements() {
-            // Clear existing
             objects.forEach(obj => scene.remove(obj));
             objects = [];
 
-            const count = Math.min(dataSet.length, 200); // Max 200 for layouts
+            const count = Math.min(dataSet.length, 200);
 
             for (let i = 0; i < count; i++) {
                 const data = dataSet[i];
-                const worth = parseFloat(data.netWorth);
+                const worth = parseFloat(data.netWorth) || 0;
                 
-                // Color Logic
+                // Color Logic based on Net Worth
                 let colorClass = 'bg-red';
                 if (worth > 200000) colorClass = 'bg-green';
                 else if (worth > 100000) colorClass = 'bg-orange';
@@ -192,21 +335,23 @@
 
                 const img = document.createElement('img');
                 img.src = data.photo;
+                img.onerror = function() { 
+                    this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect fill="%23666" width="50" height="50"/><text fill="%23fff" x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="24">👤</text></svg>'; 
+                };
                 element.appendChild(img);
 
                 const name = document.createElement('div');
                 name.className = 'name';
-                name.innerHTML = data.name;
+                name.textContent = data.name.length > 14 ? data.name.substring(0, 14) + '...' : data.name;
                 element.appendChild(name);
 
                 const worthDiv = document.createElement('div');
                 worthDiv.className = 'worth';
-                worthDiv.innerHTML = `$${worth.toLocaleString()}`;
+                worthDiv.textContent = '$' + parseFloat(worth).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
                 element.appendChild(worthDiv);
 
                 const object = new CSS3DObject(element);
-                // Position will be set by transform later based on layout targets
-                object.position.copy(targets.table[i].position); 
+                object.position.copy(targets.table[i]?.position || new THREE.Vector3());
                 scene.add(object);
                 objects.push(object);
             }
@@ -217,8 +362,6 @@
             for (let i = 0; i < objects.length; i++) {
                 const object = objects[i];
                 const target = targets[i];
-                
-                // If we have more targets than data, stop at data length
                 if(!target) continue;
 
                 new TWEEN.Tween(object.position)
@@ -231,7 +374,7 @@
                     .easing(TWEEN.Easing.Exponential.InOut)
                     .start();
             }
-            new TWEEN.Tween(this)
+            new TWEEN.Tween({})
                 .to({}, duration * 2)
                 .onUpdate(render)
                 .start();
@@ -253,6 +396,14 @@
         function render() {
             renderer.render(scene, camera);
         }
+
+        // Google Login Callback
+        window.handleCredentialResponse = function (response) {
+            const loginStatus = document.getElementById('login-status');
+            loginStatus.innerText = "✅ Logged In Successfully";
+            loginStatus.className = "logged-in";
+            console.log("Google login successful");
+        };
     </script>
     <!-- Tween.js for animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
